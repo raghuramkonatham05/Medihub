@@ -1,0 +1,29 @@
+# Environment variables
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Logs
+*.log
+server_output.txt
+
+# macOS
+.DS_Store
+
+# Uploaded files (user data)
+uploads/
+
+# ML models (large & binary)
+*.pkl
+
+# Datasets (optional – remove if you WANT them on GitHub)
+datasets/
+
+# Virtual environment
+venv/
+env/
+
+# VS Code
+.vscode/
