@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Medical Report Analysis</title>
+</head>
+
+<body style="font-family: Arial; margin: 30px;">
+
+<h1>✅ ANALYSIS RESULT PAGE</h1>
+<p style="color: green;">
+    ✔ The medical report was successfully analyzed.
+</p>
+
+<hr>
+
+<!-- ================= HEALTH RESULTS ================= -->
+<h2>🩺 Health Screening Results</h2>
+
+{% if results and results|length > 0 %}
+<table border="1" cellpadding="10" cellspacing="0">
+    <tr style="background-color: #f2f2f2;">
+        <th>Disease</th>
+        <th>Risk / Status</th>
+    </tr>
+
+    {% for disease, outcome in results.items() %}
+    <tr>
+        <td><strong>{{ disease }}</strong></td>
+
+        {% if "High" in outcome %}
+            <td style="color: red; font-weight: bold;">{{ outcome }}</td>
+        {% elif "Moderate" in outcome %}
+            <td style="color: orange; font-weight: bold;">{{ outcome }}</td>
+        {% elif "Low" in outcome or "Normal" in outcome %}
+            <td style="color: green; font-weight: bold;">{{ outcome }}</td>
+        {% else %}
+            <td>{{ outcome }}</td>
+        {% endif %}
+    </tr>
+    {% endfor %}
+</table>
+
+{% else %}
+<p style="color:red;">❌ No detectable diseases from this report.</p>
+{% endif %}
+
+<hr>
+
+<!-- ================= LAB VALUES ================= -->
+<h2>🔬 Extracted Lab Values</h2>
+
+{% if lab_values and lab_values|length > 0 %}
+<table border="1" cellpadding="10" cellspacing="0">
+    <tr style="background-color: #f2f2f2;">
+        <th>Test</th>
+        <th>Value</th>
+    </tr>
+
+    {% for key, value in lab_values.items() %}
+    <tr>
+        <td>{{ key }}</td>
+        <td>{{ value }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+<p style="color:red;">❌ No lab values detected</p>
+{% endif %}
+
+<hr>
+
+<!-- ================= OCR TEXT ================= -->
+<h2>📄 Raw OCR Extracted Text</h2>
+<pre style="white-space: pre-wrap; background-color: #f9f9f9; padding: 15px; border: 1px solid #ccc;">
+{{ text }}
+</pre>
+
+<br><br>
+
+<a href="/" style="text-decoration:none; font-weight:bold;">
+    ⬅ Upload another report
+</a>
+
+</body>
+</html>

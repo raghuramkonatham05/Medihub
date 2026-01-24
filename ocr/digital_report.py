@@ -1,0 +1,187 @@
+# ocr/digital_report.py
+
+from io import BytesIO
+from datetime import datetime
+
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.units import cm
+from reportlab.pdfgen import canvas
+
+# =====================================================
+# CLINICAL REFERENCE RANGES
+# =====================================================
+REFERENCE_RANGES = {
+    "hemoglobin": (12, 17),
+    "wbc": (4000, 11000),
+    "neutrophil": (40, 65),
+    "lymphocyte": (30, 60),
+    "monocyte": (2, 10),
+    "rbc": (4.5, 6.0),
+    "pcv": (42, 52),
+    "mcv": (76, 96),
+    "mch": (27, 32),
+    "mchc": (32, 36),
+    "platelets": (150000, 450000),
+
+    "hba1c": (4, 5.6),
+    "fasting_glucose": (70, 99),
+    "random_glucose": (70, 140),
+    "creatinine": (0.6, 1.3),
+    "total_cholesterol": (0, 200),
+    "ldl": (0, 130),
+    "hdl": (40, 100),
+    "triglycerides": (0, 150),
+    "vitamin_d": (30, 100),
+}
+
+# =====================================================
+# UNITS
+# =====================================================
+UNITS = {
+    "hemoglobin": "g/dL",
+    "wbc": "/cumm",
+    "neutrophil": "%",
+    "lymphocyte": "%",
+    "monocyte": "%",
+    "rbc": "mill/cumm",
+    "pcv": "%",
+    "mcv": "fL",
+    "mch": "pg",
+    "mchc": "g/dL",
+    "platelets": "/cumm",
+
+    "hba1c": "%",
+    "fasting_glucose": "mg/dL",
+    "random_glucose": "mg/dL",
+    "creatinine": "mg/dL",
+    "total_cholesterol": "mg/dL",
+    "ldl": "mg/dL",
+    "hdl": "mg/dL",
+    "triglycerides": "mg/dL",
+    "vitamin_d": "ng/mL",
+}
+
+# =====================================================
+# PDF GENERATOR
+# =====================================================
+def generate_digital_report(report):
+    """
+    Generates a PROFESSIONAL, CONSISTENT PDF medical report
+    Input: report (MongoDB document)
+    Output: BytesIO (PDF file)
+    """
+
+    buffer = BytesIO()
+    pdf = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+
+    patient = report.get("patient", {})
+    lab_values = report.get("lab_values", {})
+    flags = report.get("flags", {})
+    created_at = report.get("created_at", datetime.utcnow())
+
+    y = height - 2 * cm
+
+    # =================================================
+    # HEADER
+    # =================================================
+    pdf.setFont("Helvetica-Bold", 18)
+    pdf.drawCentredString(width / 2, y, "MediHub – Digital Medical Report")
+    y -= 1.1 * cm
+
+    pdf.setFont("Helvetica", 10)
+    pdf.drawCentredString(
+        width / 2,
+        y,
+        "AI-assisted laboratory report analysis"
+    )
+    y -= 1.4 * cm
+
+    # =================================================
+    # PATIENT INFO
+    # =================================================
+    pdf.setFont("Helvetica-Bold", 12)
+    pdf.drawString(2 * cm, y, "Patient Information")
+    y -= 0.8 * cm
+
+    pdf.setFont("Helvetica", 10)
+    pdf.drawString(2 * cm, y, f"Name        : {patient.get('name', 'N/A')}")
+    y -= 0.5 * cm
+
+    pdf.drawString(
+        2 * cm,
+        y,
+        f"Age / Gender: {patient.get('age', 'N/A')} / {patient.get('gender', 'N/A')}"
+    )
+    y -= 0.5 * cm
+
+    pdf.drawString(
+        2 * cm,
+        y,
+        f"Report Date : {created_at.strftime('%d %b %Y')}"
+    )
+    y -= 1.2 * cm
+
+    # =================================================
+    # TABLE HEADER
+    # =================================================
+    pdf.setFont("Helvetica-Bold", 11)
+    pdf.drawString(2 * cm, y, "Test")
+    pdf.drawString(7.5 * cm, y, "Value")
+    pdf.drawString(10.5 * cm, y, "Status")
+    pdf.drawString(13.5 * cm, y, "Reference")
+    y -= 0.4 * cm
+
+    pdf.line(2 * cm, y, width - 2 * cm, y)
+    y -= 0.5 * cm
+
+    # =================================================
+    # TABLE ROWS
+    # =================================================
+    pdf.setFont("Helvetica", 10)
+
+    for test, value in lab_values.items():
+        status = flags.get(test, {}).get("status", "normal").upper()
+        unit = UNITS.get(test, "")
+        ref = REFERENCE_RANGES.get(test)
+
+        pdf.drawString(2 * cm, y, test.replace("_", " ").upper())
+        pdf.drawString(7.5 * cm, y, f"{value} {unit}")
+        pdf.drawString(10.5 * cm, y, status)
+
+        if ref:
+            pdf.drawString(13.5 * cm, y, f"{ref[0]} – {ref[1]}")
+        else:
+            pdf.drawString(13.5 * cm, y, "—")
+
+        y -= 0.45 * cm
+
+        # New page if required
+        if y < 2 * cm:
+            pdf.showPage()
+            pdf.setFont("Helvetica", 10)
+            y = height - 2 * cm
+
+    # =================================================
+    # FOOTER
+    # =================================================
+    y -= 0.8 * cm
+    pdf.setFont("Helvetica-Oblique", 9)
+    pdf.drawString(
+        2 * cm,
+        y,
+        "Disclaimer: This AI-generated report is for informational purposes only."
+    )
+    y -= 0.4 * cm
+
+    pdf.drawString(
+        2 * cm,
+        y,
+        "Generated by MediHub AI • Do not use for self-diagnosis"
+    )
+
+    pdf.showPage()
+    pdf.save()
+
+    buffer.seek(0)
+    return buffer

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MediHub – ML & AI Medical Report Analysis</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+
+    <style>
+        body {
+            background: linear-gradient(180deg, #f8fbff, #eef4ff);
+            font-family: "Segoe UI", system-ui, sans-serif;
+        }
+
+        .hero-wrapper {
+            max-width: 1100px;
+            margin: 80px auto;
+            background: #ffffff;
+            border-radius: 18px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.08);
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            overflow: hidden;
+        }
+
+        .hero-left { padding: 50px; position: relative; }
+
+        .hero-right {
+            background: linear-gradient(160deg, #2563eb, #1e40af);
+            color: #ffffff;
+            padding: 50px;
+        }
+
+        .brand {
+            font-size: 36px;
+            font-weight: 800;
+            color: #111827;
+        }
+
+        .brand span { color: #2563eb; }
+
+        .subtitle {
+            font-size: 20px;
+            margin-top: 10px;
+            color: #374151;
+            font-weight: 600;
+        }
+
+        .desc {
+            margin-top: 18px;
+            color: #4b5563;
+            line-height: 1.6;
+            font-size: 15px;
+        }
+
+        .features {
+            margin-top: 24px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .chip {
+            background: #f1f5f9;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .upload-box {
+            margin-top: 35px;
+            border: 2px dashed #c7d2fe;
+            padding: 30px;
+            border-radius: 14px;
+            text-align: center;
+            background: #f8fafc;
+        }
+
+        .upload-box input { display: none; }
+
+        .upload-label {
+            display: inline-block;
+            background: #2563eb;
+            color: #ffffff;
+            padding: 14px 28px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        .upload-note {
+            margin-top: 12px;
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        .btn {
+            width: 100%;
+            margin-top: 18px;
+            padding: 14px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+        }
+
+        .btn-upload {
+            background: #1e40af;
+            color: #ffffff;
+        }
+
+        .btn-dashboard {
+            background: #16a34a;
+            color: #ffffff;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            margin-top: 14px;
+        }
+
+        .message-success {
+            margin-top: 16px;
+            color: #16a34a;
+            font-weight: 700;
+        }
+
+        .message-error {
+            margin-top: 16px;
+            color: #dc2626;
+            font-weight: 700;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="hero-wrapper">
+
+    <!-- LEFT -->
+    <div class="hero-left">
+
+        <div class="brand">Medi<span>Hub</span></div>
+        <div class="subtitle">ML & AI-Powered Medical Report Analysis</div>
+
+        <p class="desc">
+            Upload your laboratory report (image or PDF).
+            Our <strong>Machine Learning + AI system</strong> digitizes the report,
+            detects health risks, flags abnormal values, and presents insights
+            in a professional medical dashboard.
+        </p>
+
+        <div class="features">
+            <div class="chip">📄 Upload Report</div>
+            <div class="chip">🤖 ML + AI OCR</div>
+            <div class="chip">📊 Health Dashboard</div>
+            <div class="chip">🩺 Risk Detection</div>
+        </div>
+
+        <!-- UPLOAD FORM -->
+        <form method="POST" enctype="multipart/form-data">
+            <div class="upload-box">
+                <label class="upload-label">
+                    Choose Lab Report
+                    <input type="file" name="report" required>
+                </label>
+
+                <div class="upload-note">
+                    Supports JPG, PNG & PDF (including WhatsApp photos)
+                </div>
+            </div>
+
+            <button class="btn btn-upload" type="submit">
+                Upload & Digitize Report
+            </button>
+        </form>
+
+        {% if error %}
+            <div class="message-error">{{ error }}</div>
+        {% endif %}
+
+        <!-- ✅ FIXED CONDITION -->
+        {% if upload_done %}
+            <div class="message-success">
+                ✅ Report digitalized successfully!
+            </div>
+
+            <a href="{{ url_for('analyze') }}" class="btn btn-dashboard">
+                View ML-AI Dashboard
+            </a>
+        {% endif %}
+
+    </div>
+
+    <!-- RIGHT -->
+    <div class="hero-right">
+        <h3>What MediHub Does</h3>
+        <ul>
+            <li>Reads scanned & photographed lab reports</li>
+            <li>ML-based disease risk detection</li>
+            <li>AI-driven LOW / NORMAL / HIGH analysis</li>
+            <li>Diabetes, Kidney, Cardiac insights</li>
+            <li>Doctor-style recommendations</li>
+            <li>Visual organ & trend analysis</li>
+        </ul>
+    </div>
+
+</div>
+
+</body>
+</html>

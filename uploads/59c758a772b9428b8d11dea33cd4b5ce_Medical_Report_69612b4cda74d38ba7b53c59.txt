@@ -1,0 +1,24 @@
+MEDIHUB – DIGITAL MEDICAL REPORT
+==================================================
+Patient Name : Ratna Kumari
+Age / Gender : 65 / Female
+Report Date  : 09 Jan 2026
+
+LAB RESULTS
+--------------------------------------------------
+HEMOGLOBIN             : 11.0 g/dL   [NORMAL]  (Ref: 12 - 17)
+WBC                    : 17100.0        [HIGH  ]  (Ref: - - -)
+NEUTROPHIL             : 86.0        [HIGH  ]  (Ref: - - -)
+LYMPHOCYTE             : 9.0        [LOW   ]  (Ref: - - -)
+MONOCYTE               : 2.0        [NORMAL]  (Ref: - - -)
+RBC                    : 4.6        [NORMAL]  (Ref: - - -)
+PCV                    : 34.8        [LOW   ]  (Ref: - - -)
+MCV                    : 75.6        [LOW   ]  (Ref: - - -)
+MCH                    : 24.0        [LOW   ]  (Ref: - - -)
+MCHC                   : 31.7        [LOW   ]  (Ref: - - -)
+PLATELETS              : 206000.0        [NORMAL]  (Ref: - - -)
+
+DISCLAIMER
+--------------------------------------------------
+This AI-generated report is for informational purposes only.
+Please consult a qualified medical professional for diagnosis.

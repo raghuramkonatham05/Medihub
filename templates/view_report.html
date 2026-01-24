@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Medical Report</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+
+    <style>
+        body {
+            background: #f5f7fb;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .top-actions {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .top-actions a {
+            text-decoration: none;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .card {
+            background: #ffffff;
+            padding: 24px;
+            border-radius: 14px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+            margin-bottom: 24px;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+        }
+
+        .muted {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+            text-align: left;
+        }
+
+        th {
+            background: #f9fafb;
+        }
+
+        .status-low {
+            color: #f97316;
+            font-weight: 700;
+        }
+
+        .status-normal {
+            color: #16a34a;
+            font-weight: 700;
+        }
+
+        .status-high {
+            color: #dc2626;
+            font-weight: 700;
+        }
+
+        .download-btn {
+            display: inline-block;
+            background: #16a34a;
+            color: #fff;
+            padding: 10px 16px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- TOP NAV -->
+    <div class="top-actions">
+        <a href="{{ url_for('documents') }}">⬅ Back to Reports</a>
+        <a href="{{ url_for('analyze') }}">📊 Back to Dashboard</a>
+    </div>
+
+    <!-- PATIENT INFO -->
+    <div class="card">
+        <h1>{{ report.patient.name or "Patient" }}</h1>
+        <p class="muted">
+            Age: {{ report.patient.age or "N/A" }} |
+            Gender: {{ report.patient.gender or "N/A" }} |
+            Date: {{ report.created_at.strftime("%d %b %Y") }}
+        </p>
+    </div>
+
+    <!-- LAB VALUES -->
+    <div class="card">
+        <h2>Lab Results</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Test</th>
+                    <th>Value</th>
+                    <th>Status</th>
+                    <th>Reference</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for test, value in report.lab_values.items() %}
+                {% set flag = report.flags.get(test, {}) %}
+                <tr>
+                    <td>{{ test.replace("_", " ").upper() }}</td>
+                    <td>{{ value }}</td>
+                    <td class="status-{{ flag.get('color', 'normal') }}">
+                        {{ flag.get('status', 'normal').upper() }}
+                    </td>
+                    <td>{{ flag.get('range', '-') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- DOWNLOAD -->
+    <div class="card">
+        <a class="download-btn"
+           href="{{ url_for('download_report', report_id=report._id) }}">
+            ⬇ Download PDF Report
+        </a>
+    </div>
+
+</div>
+
+</body>
+</html>

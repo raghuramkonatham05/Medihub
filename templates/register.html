@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MediHub | Register</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #ecfeff, #f8fafc);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .auth-box {
+            background: #fff;
+            padding: 30px;
+            width: 360px;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        p {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 12px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+        }
+
+        .password-box {
+            position: relative;
+        }
+
+        .password-box span {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .rules {
+            font-size: 12px;
+            color: #555;
+            margin-top: 6px;
+        }
+
+        .rules ul {
+            padding-left: 18px;
+            margin: 6px 0 0;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #b91c1c;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 13px;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        /* ✅ SUCCESS STATE */
+        .success-box {
+            text-align: center;
+            padding: 10px;
+        }
+
+        .success-box h3 {
+            color: #16a34a;
+            margin-bottom: 10px;
+        }
+
+        .success-box p {
+            font-size: 14px;
+            color: #374151;
+        }
+
+        .btn-login {
+            display: block;
+            margin-top: 18px;
+            padding: 10px;
+            background: #2563eb;
+            color: #fff;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .btn-login:hover {
+            background: #1e40af;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 20px;
+            padding: 10px;
+            background: #16a34a;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #15803d;
+        }
+
+        .link {
+            margin-top: 15px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .link a {
+            color: #16a34a;
+            text-decoration: none;
+        }
+    </style>
+
+    <script>
+        function togglePassword() {
+            const input = document.getElementById("password");
+            input.type = input.type === "password" ? "text" : "password";
+        }
+    </script>
+</head>
+
+<body>
+
+<div class="auth-box">
+
+    {% if success %}
+        <!-- ✅ SUCCESS VIEW -->
+        <div class="success-box">
+            <h3>✅ Account Created Successfully</h3>
+            <p>Your account has been created using</p>
+            <p><strong>{{ email }}</strong></p>
+
+            <a href="{{ url_for('login') }}" class="btn-login">
+                Go to Login
+            </a>
+        </div>
+
+    {% else %}
+        <!-- 🔐 REGISTER FORM -->
+        <h2>Create Account</h2>
+        <p>Start managing your medical reports</p>
+
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST" novalidate>
+            <input
+                type="email"
+                name="email"
+                placeholder="Email address"
+                required
+            >
+
+            <div class="password-box">
+                <input
+                    type="password"
+                    name="password"
+                    id="password"
+                    placeholder="Password"
+                    required
+                >
+                <span onclick="togglePassword()">👁</span>
+            </div>
+
+            <div class="rules">
+                Password must contain:
+                <ul>
+                    <li>Minimum 8 characters</li>
+                    <li>At least 1 capital letter</li>
+                    <li>At least 1 special character</li>
+                </ul>
+            </div>
+
+            <button type="submit">Register</button>
+        </form>
+
+        <div class="link">
+            Already have an account?
+            <a href="{{ url_for('login') }}">Login</a>
+        </div>
+    {% endif %}
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Appointments</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+</head>
+<body>
+
+<div class="layout">
+
+    <aside class="sidebar">
+        <div class="logo">Medical AI</div>
+        <nav>
+            <a href="/">Dashboard</a>
+            <a class="active">Appointments</a>
+            <a>Documents</a>
+            <a>Settings</a>
+        </nav>
+    </aside>
+
+    <main class="main">
+
+        <h2>Recommended Follow-up Tests</h2>
+
+        {% if recommended_tests %}
+            <ul>
+                {% for test in recommended_tests %}
+                    <li>{{ test }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No follow-up tests required.</p>
+        {% endif %}
+
+        <h2>Nearby Diagnostic Labs</h2>
+
+        {% if labs %}
+            {% for lab in labs %}
+                <div class="card">
+                    <strong>{{ lab.name }}</strong><br>
+                    📍 {{ lab.location }}<br>
+                    ⭐ {{ lab.rating }}
+
+                    <form method="POST" action="/book-appointment">
+                        <input type="hidden" name="lab_id" value="{{ lab.id }}">
+                        <button type="submit">Book Appointment</button>
+                    </form>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>No labs found.</p>
+        {% endif %}
+
+    </main>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,16 @@
+[
+  {
+    "id": 1,
+    "name": "City Care Diagnostics",
+    "location": "Hyderabad",
+    "tests": ["HbA1c", "CBC", "Creatinine", "TSH"],
+    "phone": "9876543210"
+  },
+  {
+    "id": 2,
+    "name": "Apollo Diagnostics",
+    "location": "Hyderabad",
+    "tests": ["Glucose", "HbA1c", "Lipid Profile"],
+    "phone": "9123456780"
+  }
+]

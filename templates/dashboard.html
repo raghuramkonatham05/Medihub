@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MediHub – Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+
+    <style>
+        .flag-low { color: #f97316; font-weight: 600; }
+        .flag-normal { color: #16a34a; font-weight: 600; }
+        .flag-high { color: #dc2626; font-weight: 600; }
+
+        .flag-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            color: #fff;
+        }
+
+        .badge-low { background: #f97316; }
+        .badge-normal { background: #16a34a; }
+        .badge-high { background: #dc2626; }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .nav-bottom {
+            margin-top: auto;
+            padding-top: 20px;
+            border-top: 1px solid #334155;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            text-decoration: none;
+            font-weight: 600;
+            color: #2563eb;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="dashboard">
+
+    <!-- ================= SIDEBAR ================= -->
+    <aside class="sidebar">
+        <div>
+            <div class="brand">MediHub</div>
+            <nav>
+                <a href="{{ url_for('analyze') }}" class="active">📊 Dashboard</a>
+                <a href="{{ url_for('documents') }}">📁 Reports</a>
+            </nav>
+        </div>
+
+        <div class="nav-bottom">
+            <a href="{{ url_for('logout') }}" class="logout-btn">🚪 Logout</a>
+        </div>
+    </aside>
+
+    <!-- ================= MAIN ================= -->
+    <main class="main">
+
+        <a href="{{ url_for('index') }}" class="back-link">⬅ Back to Upload</a>
+
+        <header class="header">
+            <h1>Health Overview</h1>
+            <p class="muted">AI-powered medical insights</p>
+        </header>
+
+        <!-- ================= PATIENT CARD ================= -->
+        <section class="patient-card">
+            {% if avatar %}
+                <img src="{{ url_for('static', filename='avatars/' + avatar) }}" alt="Patient Avatar">
+            {% else %}
+                <img src="{{ url_for('static', filename='images/human2.png') }}" alt="Patient Avatar">
+            {% endif %}
+
+            <div>
+                <!-- ✅ NAME CLEANUP FIX -->
+                <h2>
+                    {{ patient.name.replace("Age", "").replace("AGE", "").strip() if patient.name else "Patient" }}
+                </h2>
+
+                <p class="muted">
+                    {{ patient.gender or "Unknown" }}
+                    {% if patient.age %}
+                        · {{ patient.age }} years
+                    {% endif %}
+                </p>
+
+                <div class="badges">
+                    <span>AI Verified</span>
+                    <span>Lab Based</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= REPORT TYPES ================= -->
+        <section>
+            <h3 class="section-title">Detected Report Types</h3>
+            <div class="grid">
+                {% for r in report_types %}
+                <div class="card small">
+                    <strong>{{ r }}</strong>
+                    <p class="muted">Detected by AI</p>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- ================= AI PREDICTIONS ================= -->
+        <section>
+            <h3 class="section-title">AI Predictions</h3>
+            <div class="grid">
+                {% for disease, result in results.items() %}
+                <div class="card">
+                    <strong>{{ disease }}</strong>
+                    {% if result is iterable and result is not string %}
+                        <ul>
+                            {% for item in result %}
+                                <li>{{ item }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p>{{ result }}</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- ================= LAB VALUES ================= -->
+        <section class="card table-card">
+            <h3>Extracted Lab Values</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Test</th>
+                        <th>Value</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for test, value in lab_values.items() %}
+                    {% set color = flags.get(test, {}).get("color", "normal") %}
+                    {% set status = flags.get(test, {}).get("status", "normal") %}
+                    <tr>
+                        <td>{{ test.replace("_", " ").upper() }}</td>
+                        <td class="flag-{{ color }}">{{ value }}</td>
+                        <td>
+                            <span class="flag-badge badge-{{ color }}">
+                                {{ status|upper }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+
+        <!-- ================= RECOMMENDATIONS ================= -->
+        <section class="card">
+            <h3>Doctor Recommendations</h3>
+            <ul>
+                {% for rec in recommendations %}
+                    <li>{{ rec }}</li>
+                {% endfor %}
+            </ul>
+        </section>
+
+    </main>
+</div>
+
+</body>
+</html>
