@@ -1,40 +1,45 @@
 # database.py
 
 from pymongo import MongoClient
+from dotenv import load_dotenv
+import os
 from datetime import datetime
 
 # =============================
-# MONGODB CONNECTION
+# LOAD ENV VARIABLES (FORCED)
 # =============================
-client = MongoClient("mongodb://localhost:27017")
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env"))
 
-# Database name
+# =============================
+# MONGODB CONNECTION (ATLAS)
+# =============================
+MONGO_URI = os.getenv("MONGO_URI")
+
+if not MONGO_URI:
+    raise RuntimeError("MONGO_URI not found in .env file")
+
+client = MongoClient(MONGO_URI)
+
+# =============================
+# DATABASE
+# =============================
 db = client["medical_ai"]
 
 # =============================
 # COLLECTIONS
 # =============================
-
-# Users collection
 users = db["users"]
-
-# Reports collection
 reports = db["reports"]
 
 # =============================
-# OPTIONAL: INDEXES (SAFE)
+# INDEXES (SAFE TO RUN MULTIPLE TIMES)
 # =============================
-
-# Ensure unique email per user
 users.create_index("email", unique=True)
-
-# Faster lookup for user reports
 reports.create_index("user_id")
 
 # =============================
 # SAMPLE SCHEMA (REFERENCE)
 # =============================
-
 """
 users document example:
 {

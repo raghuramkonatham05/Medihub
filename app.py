@@ -46,7 +46,8 @@ from ml.report_classifier import detect_report_type
 
 # ================= FLASK APP =================
 app = Flask(__name__)
-app.secret_key = "medical_ai_secret"
+app.secret_key = os.getenv("FLASK_SECRET_KEY")
+
 
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
