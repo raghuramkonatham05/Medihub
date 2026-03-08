@@ -34,5 +34,5 @@ python-dotenv==1.0.1
 python-dateutil==2.9.0.post0
 six==1.17.0
 
-paddlepaddle==2.6.1
+paddlepaddle==2.6.2
 paddleocr==2.7.3
