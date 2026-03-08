@@ -3,23 +3,19 @@ load_dotenv()
 
 from flask import (
     Flask, render_template, request,
-    session, redirect, url_for, send_file
+    session, redirect, url_for, send_file,abort
 )
 
 import os
 import uuid
 import traceback
 from datetime import datetime, timedelta
-from flask import send_file
-from utils.email_service import send_welcome_email
-
-
 
 from werkzeug.security import generate_password_hash, check_password_hash
 from bson.objectid import ObjectId
 
 # ================= UTILS =================
-from utils.email_service import send_otp_email
+from utils.email_service import send_otp_email, send_welcome_email
 from utils.validators import is_valid_email, is_strong_password
 from utils.otp import generate_otp
 from utils.avatar_selector import select_avatar
@@ -35,22 +31,23 @@ from ocr.medi_hub_detector import is_medihub_generated
 from ocr.lab_flags import flag_lab_values
 from ocr.lab_explanations import explain
 from ocr.digital_report import generate_digital_report
-
+from ocr.disease_predictor import predict_diseases
 
 # ================= ML MODELS =================
 from ml.diabetes_ml import predict_diabetes_ml
 from ml.anemia_ml import predict_anemia_ml
 from ml.kidney_ml import predict_kidney_ml
 from ml.cbc_ml import predict_cbc
+from ml.liver_ml import predict_liver_ml
 from ml.report_classifier import detect_report_type
 
 # ================= FLASK APP =================
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY")
 
-
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
 
 # =================================================
 # LOGIN CHECK
@@ -58,11 +55,10 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 def login_required():
     return "user_id" in session
 
-
 # =================================================
-# INDEX → UPLOAD
+# UPLOAD PAGE
 # =================================================
-@app.route("/", methods=["GET", "POST"])
+@app.route("/upload", methods=["GET", "POST"])
 def index():
     if not login_required():
         return redirect(url_for("login"))
@@ -98,11 +94,22 @@ def index():
                 upload_done=False
             )
 
-        lab_values = sanitize_lab_values(extract_lab_values(raw_text))
+                # =========================
+        # LAB EXTRACTION
+        # =========================
+        lab_values = sanitize_lab_values(
+            extract_lab_values(raw_text)
+        )
         flags = flag_lab_values(lab_values)
         patient = extract_patient_info(raw_text)
 
-        # ✅ CLEAN OCR NOISE FROM NAME (FIXED LOCATION)
+        # =========================
+        # DISEASE PREDICTION
+        # =========================
+        diseases = predict_diseases(lab_values)
+
+
+        # CLEAN NAME
         if patient.get("name"):
             patient["name"] = (
                 patient["name"]
@@ -118,6 +125,7 @@ def index():
             "patient": patient,
             "lab_values": lab_values,
             "flags": flags,
+            "diseases": diseases,
             "created_at": datetime.utcnow()
         }
 
@@ -147,12 +155,14 @@ def analyze():
         {"user_id": session["user_id"]},
         sort=[("created_at", -1)]
     )
+
     if not report:
         return redirect(url_for("index"))
 
     patient = report.get("patient", {})
     lab_values = report.get("lab_values", {})
     flags = report.get("flags", {})
+    diseases = report.get("diseases", {})
 
     explanations = {
         t: explain(t, d.get("status", "normal"))
@@ -177,6 +187,9 @@ def analyze():
 
     if "Kidney" in report_types:
         results["Kidney"] = predict_kidney_ml(lab_values)
+    if "Liver" in report_types:
+        results["Liver"] = predict_liver_ml(lab_values, patient)
+
 
     return render_template(
         "dashboard.html",
@@ -185,11 +198,11 @@ def analyze():
         lab_values=lab_values,
         flags=flags,
         explanations=explanations,
+        diseases=diseases,
         report_types=report_types,
         results=results,
         recommendations=["Maintain a healthy lifestyle."]
     )
-
 
 # =================================================
 # DOCUMENTS
@@ -362,6 +375,7 @@ def login():
     return render_template("login.html")
 
 
+
 # =================================================
 # FORGOT PASSWORD
 # =================================================
@@ -441,7 +455,154 @@ def reset_password():
 @app.route("/logout")
 def logout():
     session.clear()
-    return redirect(url_for("login"))
+    return redirect(url_for("home"))
+
+# ---------------- HOME ----------------
+@app.route("/")
+def home():
+    return render_template(
+        "home.html",
+        navbar_type="home"
+    )
+
+
+
+# ================= HELP CENTER =================
+
+@app.route("/help")
+def help_page():
+    return render_template(
+        "help/help.html",
+        navbar_type="help"
+    )
+
+
+
+@app.route("/help/topics")
+def help_topics():
+    return render_template("help/help-topic.html")
+
+
+from flask import render_template, redirect
+
+@app.route("/help/article/<slug>")
+def help_article(slug):
+
+    articles = {
+
+        "replace-doctor": {
+            "title": "Can MediHub replace my doctor?",
+            "content": [
+                "No. MediHub is not designed to replace doctors or certified medical professionals. It is an AI-powered assistance tool created to help users better understand their medical reports and health data.",
+
+                "MediHub explains medical terms, lab values, and highlights abnormal results in a simple and easy-to-understand manner. This helps users become more informed about their health reports before consulting a healthcare provider.",
+
+                "The platform does not provide diagnoses, prescriptions, or treatment plans. All insights generated by MediHub are informational and should not be considered medical advice.",
+
+                "Medical decisions require clinical judgment, physical examination, and patient history, which only a qualified doctor can provide. MediHub works best as a supportive tool alongside professional medical care.",
+
+                "Always consult a certified doctor or healthcare professional for diagnosis, treatment, or medical decisions."
+            ]
+        },
+
+        "data-security": {
+            "title": "Is my data secure?",
+            "content": [
+                "Yes. MediHub takes data privacy and security very seriously. All uploaded medical data is encrypted using industry-standard security protocols.",
+
+                "Your reports are securely stored and protected against unauthorized access. We follow best practices in data handling, storage, and transmission to ensure confidentiality.",
+
+                "MediHub does not sell, share, or distribute your personal or medical data to third parties for marketing or commercial purposes.",
+
+                "Access to sensitive data is restricted and monitored, and security measures are continuously updated to address emerging threats.",
+
+                "Users remain in control of their data and can choose when and how to use MediHub’s services with confidence."
+            ]
+        },
+
+        "supported-reports": {
+            "title": "What reports are supported?",
+            "content": [
+                "MediHub supports commonly prescribed laboratory reports including CBC, diabetes reports, liver function tests, kidney function tests, and other routine blood investigations.",
+
+                "Each report is analyzed to help users understand key parameters, normal reference ranges, and possible abnormalities.",
+
+                "Both scanned PDF reports and digitally generated lab reports are supported using OCR technology.",
+
+                "Digital reports allow more accurate structured data extraction for better insights.",
+
+                "Support for additional report types is continuously expanding."
+            ]
+        },
+
+        "analysis-method": {
+            "title": "How does MediHub analyze reports?",
+            "content": [
+                "MediHub uses OCR technology to extract values, units, and test names from reports.",
+
+                "Machine learning models analyze these values against standard medical ranges.",
+
+                "Rule-based logic explains abnormal findings in simple language.",
+
+                "The system focuses on clarity rather than medical jargon.",
+
+                "All insights are informational and should be discussed with a doctor."
+            ]
+        },
+
+        # ✅ MATCHES: /help/article/upload-report
+        "upload-report": {
+            "title": "How do I upload a lab report?",
+            "content": [
+                "MediHub allows you to upload medical reports in PDF or image format.",
+                "You can upload scanned or digitally generated lab reports.",
+                "OCR technology extracts values securely from the document.",
+                "Ensure reports are clear and readable for best accuracy.",
+                "Uploaded reports are encrypted and never shared without consent."
+            ]
+        },
+
+        # ✅ MATCHES: /help/article/read-results
+        "read-results": {
+            "title": "How do I understand my test results?",
+            "content": [
+                "MediHub converts complex medical terms into easy explanations.",
+                "Normal and abnormal values are clearly highlighted.",
+                "Each test includes context on what it means for your health.",
+                "Users are encouraged to consult doctors for decisions.",
+                "This feature supports—not replaces—medical advice."
+            ]
+        },
+
+        # ✅ MATCHES: /help/article/ai-accuracy
+        "ai-accuracy": {
+            "title": "How accurate is AI analysis?",
+            "content": [
+                "MediHub uses trained machine learning models on medical datasets.",
+                "Accuracy depends on report quality and clarity.",
+                "AI helps detect potential abnormalities and trends.",
+                "Medical rules ensure explanations are safe and responsible.",
+                "Final medical decisions should always involve professionals."
+            ]
+        }
+    }
+
+    article = articles.get(slug)
+    if not article:
+        return redirect("/help")
+
+    return render_template(
+        "help/help-article.html",
+        article=article,
+        navbar_type="help"
+    )
+
+
+
+# ---------------- CONTACT SUPPORT ----------------
+@app.route("/contact", methods=["GET"])
+def contact():
+    return render_template("help/contact.html")
 
 
 # =================================================

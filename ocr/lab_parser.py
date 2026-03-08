@@ -1,126 +1,117 @@
+# ocr/lab_parser.py
+
 import re
 
-# ================================
-# TEST KEYWORDS (CAN EXTEND)
-# ================================
-TEST_KEYWORDS = {
-    "hemoglobin": ["hemoglobin", "haemoglobin", "hb"],
-    "wbc": ["total wbc", "wbc count", "wbc"],
-    "rbc": ["total rbc", "rbc count", "rbc"],
+# ==================================================
+# TEST DEFINITIONS
+# ==================================================
+TESTS = {
+    "hemoglobin": ["hemoglobin", "haemoglobin", "hb", "h b", "h.b"],
+    "rbc": ["rbc count", "rbc"],
     "pcv": ["pcv", "hematocrit", "hct"],
     "mcv": ["mcv"],
     "mch": ["mch"],
     "mchc": ["mchc"],
-    "rdw": ["rdw"],
-    "platelets": ["platelet count", "platelets"],
-
-    "neutrophil": ["neutrophils"],
-    "lymphocyte": ["lymphocytes"],
-    "monocyte": ["monocytes"],
-    "eosinophil": ["eosinophils"],
-    "basophil": ["basophils"],
-
-    "hba1c": ["hba1c"],
-    "fasting_glucose": ["fasting glucose", "fbs"],
-    "random_glucose": ["random glucose", "rbs"],
-
-    "creatinine": ["creatinine"],
-    "urea": ["urea"],
-
-    "total_cholesterol": ["total cholesterol"],
-    "hdl": ["hdl"],
-    "ldl": ["ldl"],
-    "triglycerides": ["triglycerides", "tg"],
-
-    "vitamin_d": ["vitamin d", "25 hydroxy"]
+    "wbc": ["total wbc count", "total wbc", "wbc"],
+    "platelets": ["platelet count", "platelets", "platelet"],
+    "lymphocyte": ["lymphocytes", "lymphocyte"],
+    "eosinophil": ["eosinophils", "eosinophil"],
+    "monocyte": ["monocytes", "monocyte"],
+    "neutrophils": ["polymorphs", "neutrophils"],
 }
 
-# ================================
-# NUMBER HANDLING
-# ================================
-NUMBER_RE = re.compile(r"([\d,]+\.?\d*)")
+# Match decimal OR integer (preserves decimals correctly)
+NUMBER_RE = re.compile(r"\d+\.\d+|\d+,?\d*")
 
 
-def clean_number(num):
-    """
-    Converts:
-    17,100  -> 17100
-    2,06,000 -> 206000
-    """
-    try:
-        return float(num.replace(",", ""))
-    except:
-        return None
-
-
-# ================================
-# NORMALIZE OCR LINE
-# ================================
-def normalize(line):
+# ==================================================
+# NORMALIZATION (FIXED — DOES NOT REMOVE DECIMALS)
+# ==================================================
+def normalize(line: str) -> str:
     line = line.lower()
+    line = re.sub(r":", "", line)      # remove only colon
     line = re.sub(r"\s+", " ", line)
     return line.strip()
 
 
-# ================================
-# CORE EXTRACTION LOGIC
-# ================================
-def extract_lab_values(text):
+def to_float(val: str):
+    try:
+        return float(val.replace(",", ""))
+    except:
+        return None
+
+
+# ==================================================
+# CORE EXTRACTION
+# Works for:
+# 1. Same-line values (PDF)
+# 2. Next-line values (OCR images)
+# ==================================================
+def extract_lab_values(text: str) -> dict:
     values = {}
     lines = [normalize(l) for l in text.splitlines() if l.strip()]
 
     for i, line in enumerate(lines):
-        for test, keywords in TEST_KEYWORDS.items():
+        for test, aliases in TESTS.items():
 
-            # Prevent overwriting correct value
             if test in values:
                 continue
 
-            if any(k in line for k in keywords):
+            if any(alias in line for alias in aliases):
 
-                # Look at same line + next 2 lines
-                scan_block = lines[i:i + 3]
-
-                for blk in scan_block:
-                    numbers = NUMBER_RE.findall(blk)
-
-                    if not numbers:
+                # 1️⃣ Try extracting from same line
+                nums = NUMBER_RE.findall(line)
+                if nums:
+                    val = to_float(nums[0])
+                    if val is not None:
+                        values[test] = val
                         continue
 
-                    value = clean_number(numbers[0])
-                    if value is None:
-                        continue
+                # 2️⃣ Try next 2 lines (OCR case)
+                for nxt in lines[i + 1:i + 3]:
+                    nums = NUMBER_RE.findall(nxt)
+                    if nums:
+                        val = to_float(nums[0])
+                        if val is not None:
+                            values[test] = val
+                            break
 
-                    # Sanity limits (medical safe)
-                    if test == "platelets" and value < 1000:
-                        continue  # likely ref range
-
-                    if 0 < value < 1_000_000:
-                        values[test] = value
-                        break
-
-    # ================================
-    # TERMINAL DEBUG OUTPUT
-    # ================================
+    # ================= DEBUG =================
     print("\n========== PARSED LAB VALUES ==========")
-    if not values:
-        print("❌ No lab values detected")
-    else:
-        for k, v in values.items():
-            print(f"{k.upper():15} : {v}")
+    for k, v in values.items():
+        print(f"{k.upper():15} : {v}")
     print("======================================\n")
 
-    return values
+    return sanitize_lab_values(values)
 
 
-# ================================
-# FINAL SANITIZER
-# ================================
-def sanitize_lab_values(values):
+# ==================================================
+# SANITIZATION (ONLY DECIMAL CORRECTIONS)
+# ==================================================
+def sanitize_lab_values(values: dict) -> dict:
     clean = {}
-    for k, v in values.items():
-        try:
-            clean[k] = float(v)
-        except:
-            pass
+
+    for test, value in values.items():
+
+        if value is None:
+            continue
+
+        # Fix decimal shift errors from OCR only
+
+        if test == "hemoglobin" and value > 30:
+            value = value / 10
+
+        if test == "rbc" and value > 10:
+            value = value / 100
+
+        if test == "pcv" and value > 100:
+            value = value / 10
+
+        if test in ["mcv", "mch", "mchc"] and value > 150:
+            value = value / 10
+
+        # IMPORTANT: No platelet multiplication or scaling
+
+        clean[test] = round(value, 2)
+
     return clean

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{% block title %}MediHub{% endblock %}</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Main CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/help.css') }}">
+</head>
+
+<body>
+
+<!-- ===== GLOBAL NAVBAR (USED IN HELP & ARTICLE PAGES) ===== -->
+<header class="main-navbar" id="navbar">
+  <div class="nav-container">
+
+    <!-- Logo -->
+    <a href="/" class="nav-logo">
+      <img src="{{ url_for('static', filename='images/medilogo.png') }}" alt="MediHub">
+      <span>Medi<span>Hub</span></span>
+    </a>
+
+    <!-- Nav links -->
+    <nav class="nav-links">
+      <a href="/">Home</a>
+      <a href="/features">Features</a>
+      <a href="/about">About</a>
+      <a href="/app">App</a>
+      <a href="/contact">Contact</a>
+      <a href="/download" class="nav-cta">Download App</a>
+    </nav>
+
+  </div>
+</header>
+
+<!-- ===== PAGE CONTENT ===== -->
+<main>
+  {% block content %}{% endblock %}
+</main>
+
+<!-- ===== FOOTER ===== -->
+<footer class="site-footer">
+  © 2026 MediHub · AI Health Intelligence Platform
+</footer>
+
+<!-- ===== NAVBAR SCROLL EFFECT ===== -->
+<script>
+  const navbar = document.getElementById("navbar");
+
+  window.addEventListener("scroll", () => {
+    if (window.scrollY > 20) {
+      navbar.classList.add("scrolled");
+    } else {
+      navbar.classList.remove("scrolled");
+    }
+  });
+</script>
+
+</body>
+</html>

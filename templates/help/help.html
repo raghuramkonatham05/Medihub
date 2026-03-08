@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}
+Help | MediHub
+{% endblock %}
+
+{% block content %}
+
+<!-- ===== HELP HERO / SEARCH ===== -->
+<section class="help-hero">
+
+  <h1>How can we help you?</h1>
+
+  <div class="help-search">
+    <input
+      type="text"
+      id="faqSearch"
+      placeholder="I'd like to know..."
+    >
+    <span class="search-icon">🔍</span>
+  </div>
+
+  <p id="noResults" style="display:none; color:#64748b; margin-top:12px;">
+    No results found.
+  </p>
+
+</section>
+
+<!-- ===== FAQ SECTION ===== -->
+<section class="faq-section">
+
+  <h2>FAQs</h2>
+
+  <ul class="faq-list" id="faqList">
+
+    <li>
+      <a href="/help/article/replace-doctor">
+        Can MediHub replace my doctor?
+      </a>
+    </li>
+
+    <li>
+      <a href="/help/article/data-security">
+        Is my data secure?
+      </a>
+    </li>
+
+    <li>
+      <a href="/help/article/supported-reports">
+        What reports are supported?
+      </a>
+    </li>
+
+    <li>
+      <a href="/help/article/analysis-method">
+        How does MediHub analyze reports?
+      </a>
+    </li>
+
+  </ul>
+
+</section>
+
+<!-- ===== OPTIONAL TOPICS SECTION ===== -->
+<section class="topics-section">
+
+  <h2>Popular topics</h2>
+
+  <div class="topics-grid">
+
+    <a class="topic-card" href="/help/article/upload-report">
+      Uploading reports
+    </a>
+
+    <a class="topic-card" href="/help/article/read-results">
+      Understanding results
+    </a>
+
+    <a class="topic-card" href="/help/article/ai-accuracy">
+      AI accuracy
+    </a>
+
+  </div>
+
+</section>
+
+<!-- ===== CONTACT CTA ===== -->
+<section class="contact-section">
+
+  <h2>Still need help?</h2>
+
+  <a href="/contact" class="contact-card">
+    Contact MediHub support →
+  </a>
+
+</section>
+
+<!-- ===== SEARCH SCRIPT ===== -->
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const searchInput = document.getElementById("faqSearch");
+    const faqItems = document.querySelectorAll("#faqList li");
+    const noResults = document.getElementById("noResults");
+
+    if (!searchInput) return;
+
+    searchInput.addEventListener("keyup", () => {
+      const query = searchInput.value.toLowerCase();
+      let visibleCount = 0;
+
+      faqItems.forEach(item => {
+        const text = item.innerText.toLowerCase();
+        if (text.includes(query)) {
+          item.style.display = "block";
+          visibleCount++;
+        } else {
+          item.style.display = "none";
+        }
+      });
+
+      noResults.style.display = visibleCount === 0 ? "block" : "none";
+    });
+  });
+</script>
+
+{% endblock %}

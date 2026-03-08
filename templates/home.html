@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MediHub – AI Medical Intelligence</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+
+<body>
+
+<!-- ================= NAVBAR ================= -->
+<header class="navbar">
+  <div class="nav-left">
+    <img src="{{ url_for('static', filename='images/medilogo.png') }}" class="logo">
+    <span class="brand">
+      Medi<span class="brand-accent">Hub</span>
+    </span>
+  </div>
+
+  <div class="nav-right">
+    <a href="/#features">Features</a>
+    <a href="#about">About</a>
+    <a href="/help">Help</a>
+    <a href="/login" class="login-btn">Login</a>
+  </div>
+</header>
+
+
+
+<!-- ================= HERO ================= -->
+<section class="hero">
+  <div class="hero-text">
+    <h1>
+      ML & AI-Powered<br>
+      Medical Report<br>
+      Intelligence
+    </h1>
+
+    <p class="hero-subtext">
+      Upload lab reports and receive accurate disease insights,
+      abnormality detection, and clear explanations —
+      powered by machine learning.
+    </p>
+  </div>
+
+  <div class="hero-image">
+    <img src="{{ url_for('static', filename='images/patient-checking-report.png') }}"
+         alt="Patient checking health report on mobile">
+  </div>
+</section>
+<!-- ================= MEDICAL INTELLIGENCE ================= -->
+<section class="info-section">
+  <div class="info-image">
+    <img src="{{ url_for('static', filename='images/doctor-using-health-app.png') }}"
+         alt="Doctor using medical app">
+  </div>
+
+  <div class="info-text">
+    <h2>Medical Intelligence, Simplified</h2>
+
+    <p>
+      Good information leads to better health choices. MediHub helps
+      patients understand reports, symptoms, and risks without medical jargon.
+    </p>
+
+    <p>
+      Built with ML & AI, guided by medical logic, and designed for real-world
+      hospital reports.
+    </p>
+  </div>
+</section>
+
+<section class="why" id="features">
+  <h2>Why MediHub?</h2>
+
+  <div class="feature-card">🧠 ML-Driven Diagnosis</div>
+  <div class="feature-card">📄 Smart Medical OCR</div>
+  <div class="feature-card">📊 Clear Medical Insights</div>
+</section>
+<section class="how-it-works" id="how">
+  <h2>How MediHub Works</h2>
+
+  <div class="steps">
+    <div class="step">
+      <span>1</span>
+      Upload your lab report
+    </div>
+    <div class="step">
+      <span>2</span>
+      OCR extracts medical values
+    </div>
+    <div class="step">
+      <span>3</span>
+      ML analyzes abnormalities
+    </div>
+    <div class="step">
+      <span>4</span>
+      Get clear explanations
+    </div>
+  </div>
+</section>
+<section class="about-section" id="about">
+  <h2>About MediHub</h2>
+
+  <p>
+    MediHub is an ML & AI-powered medical intelligence platform designed to help
+    patients and healthcare professionals understand laboratory reports clearly,
+    quickly, and confidently.
+  </p>
+
+  <p>
+    Medical lab reports often contain complex terminology, numerical ranges,
+    and abbreviations that are difficult for non-medical users to interpret.
+    MediHub bridges this gap by converting raw medical data into meaningful
+    insights.
+  </p>
+
+  <p>
+    Using machine learning models trained on clinical patterns, MediHub detects
+    abnormalities such as anemia, diabetes indicators, kidney-related issues,
+    and common CBC irregularities.
+  </p>
+
+  <p>
+    The system integrates Smart Medical OCR to accurately extract data from
+    scanned hospital PDFs and digital reports, ensuring real-world usability.
+  </p>
+
+  <p>
+    MediHub is built as a decision-support system and is not intended to replace
+    certified medical professionals.
+  </p>
+</section>
+
+
+<script>
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    },
+    { threshold: 0.15 }
+  );
+
+  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+</script>
+
+
+
+<!-- ================= FOOTER ================= -->
+<footer class="footer">
+  © 2026 MediHub · AI Health Intelligence Platform
+</footer>
+
+</body>
+</html>

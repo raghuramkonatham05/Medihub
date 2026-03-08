@@ -5,20 +5,30 @@ import os
 MODEL_PATH = os.path.join("ml", "models", "anemia_model.pkl")
 model = joblib.load(MODEL_PATH)
 
+
 def predict_anemia_ml(lab_values):
     """
     Predict anemia using ML model
-    Feature used: hemoglobin
+    Feature used: hemoglobin (robust key handling)
     """
 
-    if "hemoglobin" not in lab_values:
+    hb = None
+
+    # 🔑 Normalize keys
+    for key, value in lab_values.items():
+        k = key.lower().replace(".", "").replace(" ", "")
+        if k in ["hb", "hemoglobin"]:
+            try:
+                hb = float(value)
+                break
+            except ValueError:
+                return "Invalid hemoglobin value"
+
+    # ❌ No hemoglobin found
+    if hb is None:
         return "Insufficient data for Anemia prediction"
 
-    try:
-        hb = float(lab_values["hemoglobin"])
-    except ValueError:
-        return "Invalid hemoglobin value"
-
+    # ML prediction
     X = np.array([[hb]])
     prob = model.predict_proba(X)[0][1]
 

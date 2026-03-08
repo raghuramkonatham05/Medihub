@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Contact Support – MediHub</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/help.css') }}">
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<header class="navbar">
+  <div class="nav-left">
+    <img src="{{ url_for('static', filename='images/medilogo.png') }}" class="logo">
+    <span class="brand">Medi<span class="brand-accent">Hub</span></span>
+  </div>
+
+  <div class="nav-right">
+  <a href="/help">Help</a>
+  <a href="/login" class="login-btn">Login</a>
+</div>
+
+</header>
+
+<!-- CONTACT HERO -->
+<section class="help-hero">
+  <h1>Get help using MediHub</h1>
+</section>
+
+<!-- CONTACT FORM -->
+<section class="contact-section">
+  <form class="contact-form" method="post">
+
+    <label>Name or pseudonym</label>
+    <input type="text" name="name" required>
+
+    <label>Email address</label>
+    <input type="email" name="email" placeholder="your@email.com" required>
+
+    <label>How can we help?</label>
+    <textarea name="message" maxlength="400" placeholder="I'd like to know..." required></textarea>
+
+    <div class="char-count">0 / 400</div>
+
+    <label class="checkbox">
+      <input type="checkbox" required>
+      I confirm that I have read and understood the
+      <a href="#">Privacy Policy</a>.
+    </label>
+
+    <button type="submit" class="submit-btn">Submit</button>
+
+  </form>
+</section>
+
+<footer class="footer">
+  © 2026 MediHub · AI Health Intelligence Platform
+</footer>
+
+<script>
+const textarea = document.querySelector("textarea");
+const counter = document.querySelector(".char-count");
+
+textarea.addEventListener("input", () => {
+  counter.textContent = `${textarea.value.length} / 400`;
+});
+</script>
+
+</body>
+</html>

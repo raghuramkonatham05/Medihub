@@ -6,43 +6,67 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <style>
+        * {
+            box-sizing: border-box;
+            font-family: "Segoe UI", system-ui, sans-serif;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #ecfeff, #f8fafc);
+            margin: 0;
+            height: 100vh;
+
+            /* 🔥 SAME FULL SCREEN BACKGROUND IMAGE */
+            background: url("{{ url_for('static', filename='images/register.png') }}")
+                        no-repeat center center fixed;
+            background-size: cover;
+
             display: flex;
             align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
+            justify-content: flex-end;
         }
 
-        .auth-box {
-            background: #fff;
-            padding: 30px;
-            width: 360px;
-            border-radius: 12px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
-        }
+        /* ===== REGISTER CARD ===== */
+        .register-card {
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(8px);
 
-        h2 {
+            width: 400px;
+            padding: 36px;
+            border-radius: 18px;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.18);
+
+            margin-right: 80px;
             text-align: center;
-            margin-bottom: 8px;
         }
 
-        p {
-            text-align: center;
-            color: #666;
+        .brand {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+
+        .brand span {
+            color: #2563eb;
+        }
+
+        .subtitle {
             font-size: 14px;
-            margin-bottom: 20px;
+            color: #64748b;
+            margin-bottom: 26px;
         }
 
         input {
             width: 100%;
-            padding: 10px;
-            margin-top: 12px;
-            border-radius: 6px;
-            border: 1px solid #ccc;
+            padding: 12px 14px;
+            margin-bottom: 14px;
+            border-radius: 10px;
+            border: 1.5px solid #c7d2fe;
             font-size: 14px;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #2563eb;
         }
 
         .password-box {
@@ -51,92 +75,83 @@
 
         .password-box span {
             position: absolute;
-            right: 10px;
+            right: 12px;
             top: 50%;
             transform: translateY(-50%);
             cursor: pointer;
-            font-size: 14px;
             color: #555;
         }
 
         .rules {
+            text-align: left;
             font-size: 12px;
-            color: #555;
-            margin-top: 6px;
+            color: #64748b;
+            margin-bottom: 14px;
         }
 
         .rules ul {
-            padding-left: 18px;
             margin: 6px 0 0;
+            padding-left: 18px;
+        }
+
+        button {
+            width: 100%;
+            padding: 13px;
+            margin-top: 10px;
+            background: linear-gradient(135deg, #2563eb, #1e40af);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        button:hover {
+            opacity: 0.95;
+        }
+
+        .links {
+            margin-top: 18px;
+            font-size: 14px;
+        }
+
+        .links a {
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 600;
         }
 
         .error {
             background: #fee2e2;
             color: #b91c1c;
             padding: 8px;
-            border-radius: 6px;
+            border-radius: 8px;
             font-size: 13px;
             margin-bottom: 12px;
-            text-align: center;
         }
 
-        /* ✅ SUCCESS STATE */
-        .success-box {
-            text-align: center;
+        .success {
+            background: #dcfce7;
+            color: #166534;
             padding: 10px;
-        }
-
-        .success-box h3 {
-            color: #16a34a;
-            margin-bottom: 10px;
-        }
-
-        .success-box p {
+            border-radius: 10px;
             font-size: 14px;
-            color: #374151;
+            margin-bottom: 16px;
         }
 
-        .btn-login {
-            display: block;
-            margin-top: 18px;
-            padding: 10px;
-            background: #2563eb;
-            color: #fff;
-            border-radius: 6px;
-            text-decoration: none;
-            font-weight: 600;
-            text-align: center;
-        }
+        /* ===== MOBILE VIEW ===== */
+        @media (max-width: 900px) {
+            body {
+                justify-content: center;
+                padding: 20px;
+            }
 
-        .btn-login:hover {
-            background: #1e40af;
-        }
-
-        button {
-            width: 100%;
-            margin-top: 20px;
-            padding: 10px;
-            background: #16a34a;
-            color: #fff;
-            border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background: #15803d;
-        }
-
-        .link {
-            margin-top: 15px;
-            text-align: center;
-            font-size: 14px;
-        }
-
-        .link a {
-            color: #16a34a;
-            text-decoration: none;
+            .register-card {
+                margin-right: 0;
+                width: 100%;
+                max-width: 420px;
+            }
         }
     </style>
 
@@ -150,30 +165,28 @@
 
 <body>
 
-<div class="auth-box">
+    <!-- REGISTER CARD -->
+    <div class="register-card">
 
-    {% if success %}
-        <!-- ✅ SUCCESS VIEW -->
-        <div class="success-box">
-            <h3>✅ Account Created Successfully</h3>
-            <p>Your account has been created using</p>
-            <p><strong>{{ email }}</strong></p>
-
-            <a href="{{ url_for('login') }}" class="btn-login">
-                Go to Login
-            </a>
+        <div class="brand">Medi<span>Hub</span></div>
+        <div class="subtitle">
+            Create your secure MediHub account
         </div>
-
-    {% else %}
-        <!-- 🔐 REGISTER FORM -->
-        <h2>Create Account</h2>
-        <p>Start managing your medical reports</p>
 
         {% if error %}
             <div class="error">{{ error }}</div>
         {% endif %}
 
-        <form method="POST" novalidate>
+        {% if success %}
+            <div class="success">
+                🎉 Account created successfully!  
+                <br><br>
+                <a href="{{ url_for('login') }}">Go to Login</a>
+            </div>
+        {% else %}
+
+        <form method="POST">
+
             <input
                 type="email"
                 name="email"
@@ -201,16 +214,20 @@
                 </ul>
             </div>
 
-            <button type="submit">Register</button>
+            <button type="submit">
+                Create Account
+            </button>
+
         </form>
 
-        <div class="link">
+        {% endif %}
+
+        <div class="links">
             Already have an account?
             <a href="{{ url_for('login') }}">Login</a>
         </div>
-    {% endif %}
 
-</div>
+    </div>
 
 </body>
 </html>

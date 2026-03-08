@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ article.title }} | MediHub Help
+{% endblock %}
+
+{% block content %}
+
+<!-- ===== BREADCRUMB ===== -->
+<nav class="breadcrumb">
+  <a href="/">Home</a> ›
+  <a href="/help">Help</a> ›
+  <span>{{ article.title }}</span>
+</nav>
+
+<!-- ===== ARTICLE LAYOUT ===== -->
+<section class="article-layout ada-style">
+
+  <!-- LEFT ILLUSTRATION -->
+  <aside class="article-illustration">
+    <img
+      src="{{ url_for('static', filename='images/help-illustration.png') }}"
+      alt="Help illustration"
+    >
+  </aside>
+
+  <!-- RIGHT CONTENT -->
+  <main class="article-content">
+    <h1>{{ article.title }}</h1>
+
+    {% for p in article.content %}
+      <p>{{ p }}</p>
+    {% endfor %}
+
+    <hr>
+
+    <p class="more-help">
+      Still need help?
+      <a href="/contact">Contact support</a>
+    </p>
+  </main>
+
+</section>
+
+<!-- ===== ARTICLE FEEDBACK (PART 2 FIXED) ===== -->
+<section class="feedback-section">
+  <div class="feedback-box" id="feedbackBox">
+
+    <h3 id="feedbackQuestion">Was this article helpful?</h3>
+
+    <div class="feedback-actions">
+      <button type="button" onclick="submitFeedback('yes')">👍 Yes</button>
+      <button type="button" onclick="submitFeedback('no')">👎 No</button>
+    </div>
+
+  </div>
+</section>
+
+<!-- ===== RELATED ARTICLES ===== -->
+<section class="related-section">
+  <div class="related-container">
+    <h2>Related articles</h2>
+
+    <ul class="related-list">
+      <li><a href="/help/article/data-security">Is my data secure?</a></li>
+      <li><a href="/help/article/supported-reports">What reports are supported?</a></li>
+      <li><a href="/help/article/analysis-method">How does MediHub analyze reports?</a></li>
+      <li><a href="/help/article/ai-accuracy">How accurate is AI analysis?</a></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===== FEEDBACK SCRIPT ===== -->
+<script>
+  function submitFeedback(response) {
+    const box = document.getElementById("feedbackBox");
+
+    if (!box) return;
+
+    box.innerHTML = `
+      <h3>Thank you for your feedback!</h3>
+      <p style="margin-top:12px; font-size:16px; color:#475569;">
+        Your response helps us improve MediHub support articles.
+      </p>
+    `;
+  }
+</script>
+
+{% endblock %}

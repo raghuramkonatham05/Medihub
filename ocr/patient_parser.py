@@ -2,20 +2,6 @@ import re
 
 
 def extract_patient_info(text):
-    """
-    Robust patient info extractor for Indian lab reports.
-    Handles:
-    - Same-line & multi-line layouts
-    - Initials (G. Nagi Reddy)
-    - Name on next line after 'Name'
-    - Age/Gender split across lines
-    - Formats:
-        Age : 49 Sex : M
-        49 / M
-        Male / 40 Years
-    - Removes OCR junk (0, Date, Age, Sex, etc.)
-    """
-
     info = {
         "name": "Patient",
         "age": "--",
@@ -28,106 +14,114 @@ def extract_patient_info(text):
     lines = [l.strip() for l in text.splitlines() if l.strip()]
     joined = " ".join(lines)
 
-    # =====================================================
-    # 1️⃣ NAME EXTRACTION (LINE + NEXT LINE)
-    # =====================================================
+    # --------------------------------------------------
+    # BLOCK WORDS (NEVER A PERSON NAME)
+    # --------------------------------------------------
+    BLOCK_WORDS = {
+        "diagnostic", "laboratory", "hospital", "centre", "center",
+        "clinic", "pathology", "blood", "specimen",
+        "nagar", "road", "street", "lane", "district",
+        "mandal", "state", "rajamahendravaram"
+    }
+
+    def clean(text):
+        return re.sub(r"[^A-Za-z.\s]", "", text).strip()
+
+    def is_valid_name(name):
+        words = name.split()
+        if not (2 <= len(words) <= 4):
+            return False
+        if any(w.lower() in BLOCK_WORDS for w in words):
+            return False
+        if re.search(r"\d", name):
+            return False
+        return True
+
+    # ==================================================
+    # 1️⃣ NAME (LABEL + FORWARD SCAN)
+    # ==================================================
     for i, line in enumerate(lines):
-
-        # Case: "Name" on one line, value on next
         if re.fullmatch(r"(name|patient\s*name)", line, re.IGNORECASE):
-            if i + 1 < len(lines):
-                candidate = lines[i + 1]
-
-                if len(candidate) > 2 and not candidate.isdigit():
-                    info["name"] = candidate.title()
+            for j in range(i + 1, min(i + 6, len(lines))):
+                candidate = clean(lines[j])
+                if candidate.lower() in {"", "0", "o"}:
+                    continue
+                if is_valid_name(candidate):
+                    info["name"] = candidate.replace(".", ". ").title()
                     break
+            break
 
-        # Case: Name : Value
         m = re.search(
-            r"(?:pt\.?\s*name|patient\s*name|name)\s*[:\-]?\s*([A-Z][A-Za-z.\s]+)",
+            r"(?:name|patient\s*name)\s*[:\-]?\s*([A-Za-z.\s]{5,})",
             line,
             re.IGNORECASE
         )
         if m:
-            name = m.group(1)
-
-            # Remove trailing junk
-            name = re.sub(
-                r"\b(date|age|sex|specimen|doctor|ref)\b.*$",
-                "",
-                name,
-                flags=re.IGNORECASE
-            )
-
-            if len(name) > 2 and not name.isdigit():
-                info["name"] = name.strip().title()
+            candidate = clean(m.group(1))
+            if is_valid_name(candidate):
+                info["name"] = candidate.replace(".", ". ").title()
                 break
 
-    # =====================================================
-    # 2️⃣ NAME FALLBACK (INITIALS ANYWHERE)
-    # =====================================================
+    # ==================================================
+    # 2️⃣ CONTEXTUAL FALLBACK (NEAR AGE / SEX ONLY)
+    # ==================================================
     if info["name"] == "Patient":
-        m = re.search(
-            r"\b(?:Mr|Mrs|Ms)?\s*(?:[A-Z]\.\s*)*[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+",
-            joined
-        )
+        for i, line in enumerate(lines):
+            if re.search(r"\b(age|sex|gender)\b", line, re.IGNORECASE):
+                for back in lines[max(0, i - 5):i][::-1]:
+                    candidate = clean(back)
+                    if is_valid_name(candidate):
+                        info["name"] = candidate.replace(".", ". ").title()
+                        break
+            if info["name"] != "Patient":
+                break
+
+    # ==================================================
+    # 3️⃣ AGE EXTRACTION (ALL FORMATS)
+    # ==================================================
+    m = re.search(r"\bage\s*[:\-]?\s*(\d{1,3})\b", joined, re.IGNORECASE)
+    if not m:
+        m = re.search(r"\b(\d{1,3})\s*(years|yrs)\b", joined, re.IGNORECASE)
+    if not m:
+        m = re.search(r"\b(\d{1,3})\s*/\s*(m|f)\b", joined, re.IGNORECASE)
+
+    if m:
+        info["age"] = m.group(1)
+
+    # ==================================================
+    # 4️⃣ GENDER EXTRACTION (FIXED ✅)
+    # ==================================================
+
+    # Sex: M / F
+    m = re.search(r"\bsex\s*[:\-]?\s*(m|f)\b", joined, re.IGNORECASE)
+    if m:
+        info["gender"] = "Male" if m.group(1).lower() == "m" else "Female"
+    else:
+        # AGE / GENDER : 65 /F
+        m = re.search(r"\b\d{1,3}\s*/\s*(m|f)\b", joined, re.IGNORECASE)
         if m:
-            info["name"] = m.group(0).strip().title()
+            info["gender"] = "Male" if m.group(1).lower() == "m" else "Female"
+        else:
+            if re.search(r"\bmale\b", joined, re.IGNORECASE):
+                info["gender"] = "Male"
+            elif re.search(r"\bfemale\b", joined, re.IGNORECASE):
+                info["gender"] = "Female"
 
-    # =====================================================
-    # 3️⃣ MULTI-LINE SEX / AGE
-    # =====================================================
-    for i, line in enumerate(lines):
-        if re.search(r"sex\s*/?\s*age", line, re.IGNORECASE):
-            # Gender on next line
-            if i + 1 < len(lines):
-                g = lines[i + 1].lower()
-                if "male" in g or g == "m":
-                    info["gender"] = "Male"
-                elif "female" in g or g == "f":
-                    info["gender"] = "Female"
-
-            # Age on next-next line
-            if i + 2 < len(lines):
-                m = re.search(r"(\d{1,3})", lines[i + 2])
-                if m:
-                    info["age"] = m.group(1)
-            break
-
-    # =====================================================
-    # 4️⃣ SAME-LINE AGE + GENDER FORMATS
-    # =====================================================
-    age_gender_patterns = [
-        r"age\s*[:\-]?\s*(\d{1,3})\s*sex\s*[:\-]?\s*([mf])",
-        r"age\s*[:\-]?\s*(\d{1,3}).{0,10}?\b([mf])\b",
-        r"(\d{1,3})\s*/\s*([mf])",
-        r"(male|female)\s*/\s*(\d{1,3})\s*years"
-    ]
-
-    for pat in age_gender_patterns:
-        m = re.search(pat, joined, re.IGNORECASE)
-        if m:
-            if m.group(1).lower() in ["male", "female"]:
-                info["gender"] = m.group(1).title()
-                info["age"] = m.group(2)
-            else:
-                info["age"] = m.group(1)
-                info["gender"] = "Male" if m.group(2).upper() == "M" else "Female"
-            break
-
-    # =====================================================
-    # 5️⃣ FINAL FALLBACKS
-    # =====================================================
+    # ==================================================
+    # 5️⃣ AGE FROM CONTEXT (NUMBER BEFORE SEX)
+    # ==================================================
     if info["age"] == "--":
-        m = re.search(r"\b(\d{1,3})\s*years\b", joined, re.IGNORECASE)
-        if m:
-            info["age"] = m.group(1)
+        for i, line in enumerate(lines):
+            if re.search(r"\bsex\b", line, re.IGNORECASE):
+                for back in range(1, 4):
+                    if i - back >= 0:
+                        candidate = lines[i - back].strip()
+                        if re.fullmatch(r"\d{1,3}", candidate):
+                            age = int(candidate)
+                            if 0 < age < 120:
+                                info["age"] = str(age)
+                                break
+                break
 
-    if info["gender"] == "Unknown":
-        if re.search(r"\bmale\b", joined, re.IGNORECASE):
-            info["gender"] = "Male"
-        elif re.search(r"\bfemale\b", joined, re.IGNORECASE):
-            info["gender"] = "Female"
-
-    print("🧍 PATIENT INFO:", info)
+    print("🧍 FINAL PATIENT INFO:", info)
     return info
