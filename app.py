@@ -82,10 +82,13 @@ def index():
         # OCR
         try:
             raw_text = extract_text(file_path)
-            if not raw_text.strip():
-                raw_text = "OCR_PENDING"
-        except Exception:
-            raw_text = "OCR_PENDING"
+            print("\n========== OCR TEXT ==========")
+            print(raw_text[:1500])
+            print("==============================\n")
+        except Exception as e:
+            print("OCR ERROR:", e)
+            traceback.print_exc()
+            raw_text = ""    
 
         if is_medihub_generated(raw_text):
             return render_template(
@@ -97,9 +100,12 @@ def index():
                 # =========================
         # LAB EXTRACTION
         # =========================
-        lab_values = sanitize_lab_values(
-            extract_lab_values(raw_text)
-        )
+        lab_values = extract_lab_values(raw_text)
+        lab_values = sanitize_lab_values(lab_values)
+        print("\n========== PARSED LAB VALUES ==========")
+        print(lab_values)
+        print("======================================\n")
+        
         flags = flag_lab_values(lab_values)
         patient = extract_patient_info(raw_text)
 
